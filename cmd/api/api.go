@@ -29,7 +29,8 @@ func (s *APIServer) setupRouter() *mux.Router {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	userController := user.NewHandler()
+	userStore := user.NewStore(s.db)
+	userController := user.NewHandler(userStore)
 	userController.RegisterRoutes(subrouter)
 
 	return router

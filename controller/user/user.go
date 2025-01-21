@@ -8,11 +8,14 @@ import (
 	"github.com/youngprinnce/go-ecom/utils"
 )
 
-type Handler struct {}
+type Handler struct {
+	store types.UserStore
+}
 
-
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(store types.UserStore) *Handler {
+	return &Handler{
+		store: store,
+	}
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
@@ -29,6 +32,12 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	// decodes the incoming json into a struct and returns an error if the json is invalid
 	if err := utils.ParseJSON(r, payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	_, err := h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 }

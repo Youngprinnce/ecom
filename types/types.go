@@ -16,3 +16,9 @@ type User struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type UserStore interface {
+	GetUserByEmail(email string) (*User, error)
+	GetUserById(id int) (*User, error)
+	CreateUser(user *User) error
+}
