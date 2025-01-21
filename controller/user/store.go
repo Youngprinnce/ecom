@@ -24,7 +24,7 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 
 	if rows.Next() {
 		user := &types.User{}
-		if err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Password, &user.CreatedAt); err != nil {
 			return nil, err
 		}
 
@@ -44,7 +44,7 @@ func (s *Store) GetUserById(id int) (*types.User, error) {
 
 	if rows.Next() {
 		user := &types.User{}
-		if err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Password, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Password, &user.CreatedAt); err != nil {
 			return nil, err
 		}
 

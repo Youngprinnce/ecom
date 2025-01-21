@@ -14,7 +14,6 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Password  string `json:"-"`
 	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
 }
 
 type UserStore interface {
