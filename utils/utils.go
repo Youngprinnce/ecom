@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 
@@ -30,3 +32,5 @@ func WriteJSON(w http.ResponseWriter, status int, data any) {
 func WriteError(w http.ResponseWriter, status int, err error) {
 	WriteJSON(w, status, map[string]string{"error": err.Error()})
 }
+
+var Validate = validator.New()
