@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -24,6 +23,7 @@ type DB struct {
 }
 
 func initConfig() Config {
+	godotenv.Load()
 	return Config{
 		DB: DB{
 			User: getEnvOrPanic("DB_USER", "DB_USER is required"),
@@ -38,11 +38,6 @@ func initConfig() Config {
 }
 
 func getEnvOrPanic(key, err string) string {
-	loadErr := godotenv.Load()
-	if loadErr != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}

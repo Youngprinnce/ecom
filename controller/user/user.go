@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
-	"github.com/youngprinnce/go-ecom/controller/user/auth"
+	"github.com/youngprinnce/go-ecom/controller/auth"
 	"github.com/youngprinnce/go-ecom/types"
 	"github.com/youngprinnce/go-ecom/utils"
 )
@@ -23,7 +23,7 @@ func NewHandler(store types.UserStore) *Handler {
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/login", h.handleLogin).Methods("POST")
-	router.HandleFunc("/login", h.handleRegister).Methods("POST")
+	router.HandleFunc("/register", h.handleRegister).Methods("POST")
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -45,11 +45,11 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ , err := h.store.GetUserByEmail(payload.Email)
-	if err == nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
-		return
-	}
+	// _ , err := h.store.GetUserByEmail(payload.Email)
+	// if err == nil {
+	// 	utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+	// 	return
+	// }
 
 	hashedPassword, err := auth.HashPassword(payload.Password)
 	if err != nil {
@@ -57,7 +57,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := &types.User{
+	user := types.User{
 		Email: payload.Email,
 		FirstName: payload.FirstName,
 		LastName: payload.LastName,
