@@ -61,3 +61,38 @@ func (s *Store) CreateProduct(p types.CreateProductPayload) error {
 
 	return nil
 }
+
+func (s *Store) GetProductsByIDs(productIds []int) ([]types.Product, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	query := "SELECT * FROM products WHERE id IN (?)"
+	rows, err := s.db.QueryContext(ctx, query, productIds)
+	if err != nil {
+		return nil, fmt.Errorf("could not get products: %w", err)
+	}
+	defer rows.Close()
+
+	products := make([]types.Product, 0)
+	for rows.Next() {
+		var p types.Product
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Image, &p.Price, &p.Quantity, &p.CreatedAt); err != nil {
+			return nil, fmt.Errorf("could not get product: %w", err)
+		}
+		products = append(products, p)
+	}
+
+	return products, nil
+}
+
+func (s *Store) UpdateProduct(p types.Product) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	
+	query := "UPDATE products SET name = ?, description = ?, image = ?, price = ?, quantity = ? WHERE id = ?"
+	if _, err := s.db.ExecContext(ctx, query, p.Name, p.Description, p.Image, p.Price, p.Quantity, p.ID); err != nil {
+		return fmt.Errorf("could not update product: %w", err)
+	}
+
+	return nil
+}

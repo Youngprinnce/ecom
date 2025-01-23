@@ -45,10 +45,10 @@ type Product struct {
 
 type ProductStore interface {
 	// GetProductByID(id int) (*Product, error)
-	// GetProductsByID(ids []int) ([]Product, error)
+	GetProductsByIDs(ids []int) ([]Product, error)
 	GetProducts() ([]*Product, error)
 	CreateProduct(CreateProductPayload) error
-	// UpdateProduct(Product) error
+	UpdateProduct(Product) error
 }
 
 type CreateProductPayload struct {
@@ -80,4 +80,13 @@ type OrderItem struct {
 	Quantity  int       `json:"quantity"`
 	Price     float64   `json:"price"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type CartCheckoutPayload struct {
+	Items []CartCheckoutItem `json:"items" validate:"required"`
+}
+
+type CartCheckoutItem struct {
+	ProductID int `json:"productID"`
+	Quantity  int `json:"quantity"`
 }
