@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,8 @@ var Envs = initConfig()
 type Config struct {
 	DB DB
 	PORT string
+	JWT_EXPIRE_IN_SECONDS int64
+	JWT_SECRET string
 }
 
 type DB struct {
@@ -36,6 +39,8 @@ func initConfig() Config {
 			ParseTime: true,
 		},
 		PORT: getEnvOrPanic("PORT", "PORT is required"),
+		JWT_EXPIRE_IN_SECONDS: getEnvAsInt("JWT_EXPIRE_IN_SECONDS", 3600 * 24 * 7),
+		JWT_SECRET: getEnvOrPanic("JWT_SECRET", "JWT_SECRET is required"),
 	}
 }
 
@@ -45,4 +50,16 @@ func getEnvOrPanic(key, err string) string {
 	}
 
 	panic(err)
+}
+
+func getEnvAsInt(key string, fallback int64) int64 {
+	if value, ok := os.LookupEnv(key); ok {
+		i, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return fallback
+		}
+
+		return i
+	}
+	return fallback
 }
