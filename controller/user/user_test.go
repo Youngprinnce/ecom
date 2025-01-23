@@ -9,12 +9,9 @@ import (
 	"github.com/youngprinnce/go-ecom/types"
 )
 
-type mockUserStore struct{}
-
 func TestUserServiceHandlers(t *testing.T) {
-	//userStore := &mockUserStore{}
-	
-	//handler := NewHandler(userStore)
+	userStore := &mockUserStore{}
+	handler := NewHandler(userStore)
 
 	t.Run("should fail if the user ID is not a number", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, "/user/abc", nil)
@@ -25,7 +22,7 @@ func TestUserServiceHandlers(t *testing.T) {
 		rr := httptest.NewRecorder()
 		router := mux.NewRouter()
 
-		//router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
+		router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
 
 		router.ServeHTTP(rr, req)
 
@@ -43,7 +40,7 @@ func TestUserServiceHandlers(t *testing.T) {
 		rr := httptest.NewRecorder()
 		router := mux.NewRouter()
 
-		//router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
+		router.HandleFunc("/user/{userID}", handler.handleGetUser).Methods(http.MethodGet)
 
 		router.ServeHTTP(rr, req)
 
@@ -53,6 +50,8 @@ func TestUserServiceHandlers(t *testing.T) {
 	})
 }
 
+type mockUserStore struct{}
+
 func (m *mockUserStore) UpdateUser(u types.User) error {
 	return nil
 }
@@ -61,10 +60,10 @@ func (m *mockUserStore) GetUserByEmail(email string) (*types.User, error) {
 	return &types.User{}, nil
 }
 
-func (m *mockUserStore) CreateUser(u *types.User) error {
+func (m *mockUserStore) CreateUser(u types.User) error {
 	return nil
 }
 
-func (m *mockUserStore) GetUserById(id int) (*types.User, error) {
+func (m *mockUserStore) GetUserByID(id int) (*types.User, error) {
 	return &types.User{}, nil
 }

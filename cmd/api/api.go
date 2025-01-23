@@ -11,27 +11,28 @@ import (
 
 type APIServer struct {
 	addr string
-	db *sql.DB
+	db   *sql.DB
 }
 
 func NewAPIServer(addr string, db *sql.DB) *APIServer {
-	return &APIServer{addr: addr, db: db}
+	return &APIServer{
+		addr: addr,
+		db:   db,
+	}
 }
 
 func (s *APIServer) Run() error {
-	router := s.setupRouter()
-
-	log.Println("Server is running on", s.addr)
-	return http.ListenAndServe(s.addr, router)
-}
-
-func (s *APIServer) setupRouter() *mux.Router {
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
 	userStore := user.NewStore(s.db)
-	userController := user.NewHandler(userStore)
-	userController.RegisterRoutes(subrouter)
+	userHandler := user.NewHandler(userStore)
+	userHandler.RegisterRoutes(subrouter)
 
-	return router
+	// Serve static files
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+
+	log.Println("Listening on", s.addr)
+
+	return http.ListenAndServe(s.addr, router)
 }

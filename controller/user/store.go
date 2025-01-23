@@ -3,7 +3,6 @@ package user
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	"github.com/youngprinnce/go-ecom/types"
 )
@@ -17,8 +16,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) CreateUser(user types.User) error {
-	log.Println("Creating user", user)
-	_, err := s.db.Query("INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)", user.FirstName, user.LastName, user.Email, user.Password)
+	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)", user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		return err
 	}
@@ -47,7 +45,7 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 	return u, nil
 }
 
-func (s *Store) GetUserById(id int) (*types.User, error) {
+func (s *Store) GetUserByID(id int) (*types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM users WHERE id = ?", id)
 	if err != nil {
 		return nil, err

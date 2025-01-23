@@ -10,6 +10,7 @@ var Envs = initConfig()
 
 type Config struct {
 	DB DB
+	PORT string
 }
 
 type DB struct {
@@ -34,6 +35,7 @@ func initConfig() Config {
 			AllowNativePasswords: true,
 			ParseTime: true,
 		},
+		PORT: getEnvOrPanic("PORT", "PORT is required"),
 	}
 }
 
