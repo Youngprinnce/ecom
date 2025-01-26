@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/youngprinnce/go-ecom/controller/cart"
 	"github.com/youngprinnce/go-ecom/controller/order"
 	"github.com/youngprinnce/go-ecom/controller/product"
 	"github.com/youngprinnce/go-ecom/controller/user"
@@ -35,7 +36,9 @@ func (s *APIServer) Run() error {
 	productHandler := product.NewHandler(productStore)
 	productHandler.RegisterRoutes(subrouter)
 
-	order.NewStore(s.db)
+	orderStore := order.NewStore(s.db)
+	cartHandler := cart.NewHandler(orderStore, productStore, userStore)
+	cartHandler.RegisterRoutes(subrouter)
 
 	// Serve static files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))

@@ -1,9 +1,10 @@
 package product
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"context"
+	"strings"
 	"time"
 
 	"github.com/youngprinnce/go-ecom/types"
@@ -65,9 +66,17 @@ func (s *Store) CreateProduct(p types.CreateProductPayload) error {
 func (s *Store) GetProductsByIDs(productIds []int) ([]types.Product, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
-	query := "SELECT * FROM products WHERE id IN (?)"
-	rows, err := s.db.QueryContext(ctx, query, productIds)
+
+	// Dynamically generate placeholders for the IN clause
+	placeholders := make([]string, len(productIds))
+	args := make([]interface{}, len(productIds))
+	for i, id := range productIds {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf("SELECT * FROM products WHERE id IN (%s)", strings.Join(placeholders, ","))
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("could not get products: %w", err)
 	}
