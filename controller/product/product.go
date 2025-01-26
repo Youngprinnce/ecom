@@ -22,12 +22,13 @@ func NewHandler(store types.ProductStore) *Handler {
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	// Public routes (accessible to all users)
-	router.HandleFunc("/products", h.handleGetProducts).Methods(http.MethodGet)
+	authRouter := router.PathPrefix("/products").Subrouter()
+	authRouter.HandleFunc("", h.handleGetProducts).Methods(http.MethodGet)
+	
+	authRouter.Use(middleware.JWTAuth)             // Require JWT authentication
+	authRouter.Use(middleware.AdminOnly)           // Require admin privileges
 
 	// Protected routes (admin only)
-	router.Use(middleware.JWTAuth)             // Require JWT authentication
-	router.Use(middleware.AdminOnly)           // Require admin privileges
-
 	router.HandleFunc("/products", h.handleCreateProduct).Methods(http.MethodPost)
 	router.HandleFunc("/products/{id}", h.handleUpdateProduct).Methods(http.MethodPut)
 	router.HandleFunc("/products/{id}", h.handleDeleteProduct).Methods(http.MethodDelete)

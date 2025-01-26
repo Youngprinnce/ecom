@@ -23,7 +23,7 @@ func NewHandler(store types.UserStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	authRouter := router.PathPrefix("/user").Subrouter()
+	authRouter := router.PathPrefix("/users").Subrouter()
 	authRouter.HandleFunc("/login", h.handleLogin).Methods("POST")
 	authRouter.HandleFunc("/register", h.handleRegister).Methods("POST")
 }
