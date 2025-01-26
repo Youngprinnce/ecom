@@ -34,6 +34,7 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 		&u.LastName,
 		&u.Email,
 		&u.Password,
+		&u.Role,
 		&u.CreatedAt,
 	)
 	if err == sql.ErrNoRows {

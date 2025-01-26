@@ -121,7 +121,7 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	utils.Log.WithFields(logrus.Fields{
 		"email": user.Email,
 	}).Info("New user registered")
-	utils.WriteJSON(w, http.StatusCreated, nil)
+	utils.WriteJSON(w, http.StatusCreated, "user created")
 }
 
 func (h *Handler) handleGetUser(w http.ResponseWriter, r *http.Request) {
