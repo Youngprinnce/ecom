@@ -27,16 +27,16 @@ func NewHandler(productStore types.ProductStore, orderStore types.OrderStore, us
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	// Apply JWTAuth middleware to all order routes
-	authRouter := router.PathPrefix("/orders").Subrouter()
-	authRouter.Use(middleware.JWTAuth)
+	orderRouter := router.PathPrefix("/orders").Subrouter()
+	orderRouter.Use(middleware.JWTAuth)
 
 	// Authenticated routes
-	authRouter.HandleFunc("", h.handleGetOrders).Methods(http.MethodGet)
-	authRouter.HandleFunc("", h.handleCreateOrder).Methods(http.MethodPost)
-	authRouter.HandleFunc("/{id}", h.handleCancelOrder).Methods(http.MethodDelete)
+	orderRouter.HandleFunc("", h.handleGetOrders).Methods(http.MethodGet)
+	orderRouter.HandleFunc("", h.handleCreateOrder).Methods(http.MethodPost)
+	orderRouter.HandleFunc("/{id}", h.handleCancelOrder).Methods(http.MethodDelete)
 
 	// Admin-only route
-	adminRouter := authRouter.PathPrefix("/{id}/status").Subrouter()
+	adminRouter := orderRouter.PathPrefix("/{id}/status").Subrouter()
 	adminRouter.Use(middleware.AdminOnly)
 	adminRouter.HandleFunc("", h.handleUpdateOrderStatus).Methods(http.MethodPut)
 }

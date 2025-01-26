@@ -15,11 +15,11 @@ type User struct {
 }
 
 type RegisterUserPayload struct {
-    FirstName string `json:"firstName" validate:"required"`
-    LastName  string `json:"lastName" validate:"required"`
-    Email     string `json:"email" validate:"required,email"`
-    Password string `json:"password" validate:"required,min=8,containsany=!@#$%^&*"`
-    Role      string `json:"role" validate:"oneof=admin user"`
+	FirstName string `json:"firstName" validate:"required"`
+	LastName  string `json:"lastName" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Password  string `json:"password" validate:"required,min=8"`
+	Role      string `json:"role" validate:"oneof=admin user"`
 }
 
 type UserStore interface {
