@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/youngprinnce/go-ecom/controller/cart"
 	"github.com/youngprinnce/go-ecom/controller/order"
 	"github.com/youngprinnce/go-ecom/controller/product"
 	"github.com/youngprinnce/go-ecom/controller/user"
+	"github.com/youngprinnce/go-ecom/middleware"
 )
 
 type APIServer struct {
@@ -26,6 +26,10 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 
 func (s *APIServer) Run() error {
 	router := mux.NewRouter()
+
+	// Apply the Logging middleware to all routes
+	router.Use(middleware.Logging)
+	
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
 	userStore := user.NewStore(s.db)
@@ -37,11 +41,8 @@ func (s *APIServer) Run() error {
 	productHandler.RegisterRoutes(subrouter)
 
 	orderStore := order.NewStore(s.db)
-	cartHandler := cart.NewHandler(orderStore, productStore, userStore)
-	cartHandler.RegisterRoutes(subrouter)
-
-	// Serve static files
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+	orderHandler := order.NewHandler(productStore, orderStore, userStore)
+	orderHandler.RegisterRoutes(subrouter)
 
 	log.Println("Listening on", s.addr)
 

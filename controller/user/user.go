@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"github.com/youngprinnce/go-ecom/config"
 	"github.com/youngprinnce/go-ecom/controller/auth"
 	"github.com/youngprinnce/go-ecom/types"
@@ -22,13 +23,18 @@ func NewHandler(store types.UserStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/login", h.handleLogin).Methods("POST")
-	router.HandleFunc("/register", h.handleRegister).Methods("POST")
+	authRouter := router.PathPrefix("/user").Subrouter()
+	authRouter.HandleFunc("/login", h.handleLogin).Methods("POST")
+	authRouter.HandleFunc("/register", h.handleRegister).Methods("POST")
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var user types.LoginUserPayload
 	if err := utils.ParseJSON(r, &user); err != nil {
+		utils.Log.WithFields(logrus.Fields{
+			"error": err,
+			"email": user.Email,
+		}).Error("Failed to parse login request")
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -51,18 +57,24 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	secret := []byte(config.Envs.JWT_SECRET)
-	token, err := auth.CreateJWT(secret, u.ID)
+	token, err := auth.CreateJWT(secret, u.ID, u.Role)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
+	utils.Log.WithFields(logrus.Fields{
+		"email": user.Email,
+	}).Info("User logged in successfully")
 	utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	var user types.RegisterUserPayload
 	if err := utils.ParseJSON(r, &user); err != nil {
+		utils.Log.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to parse registration request")
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -73,31 +85,42 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if user exists
+	// Validate role (default to "user" if not provided)
+	if user.Role == "" {
+		user.Role = "user"
+	}
+
+	// Check if user exists
 	_, err := h.store.GetUserByEmail(user.Email)
 	if err == nil {
 		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", user.Email))
 		return
 	}
 
-	// hash password
+	// Hash password
 	hashedPassword, err := auth.HashPassword(user.Password)
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
+	// Create user
 	err = h.store.CreateUser(types.User{
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
 		Password:  hashedPassword,
+		Role:      user.Role,
 	})
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
+	// Log successful registration
+	utils.Log.WithFields(logrus.Fields{
+		"email": user.Email,
+	}).Info("New user registered")
 	utils.WriteJSON(w, http.StatusCreated, nil)
 }
 

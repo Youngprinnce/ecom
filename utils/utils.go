@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -24,21 +25,28 @@ func ParseJSON(r *http.Request, v any) error {
 	if r.Body == nil {
 		return fmt.Errorf("missing request body")
 	}
-
 	return json.NewDecoder(r.Body).Decode(v)
 }
 
+// GetTokenFromRequest extracts the JWT token from the request.
+// It checks the Authorization header for a Bearer token and falls back to the query parameter "token".
 func GetTokenFromRequest(r *http.Request) string {
+	// Check the Authorization header for a Bearer token
 	tokenAuth := r.Header.Get("Authorization")
-	tokenQuery := r.URL.Query().Get("token")
-	
 	if tokenAuth != "" {
-		return tokenAuth
+		// Extract the token from the "Bearer <token>" format
+		parts := strings.Split(tokenAuth, " ")
+		if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+			return parts[1]
+		}
 	}
 
+	// Fall back to the query parameter "token"
+	tokenQuery := r.URL.Query().Get("token")
 	if tokenQuery != "" {
 		return tokenQuery
 	}
 
+	// No token found
 	return ""
 }

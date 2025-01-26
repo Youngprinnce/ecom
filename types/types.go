@@ -10,20 +10,22 @@ type User struct {
 	LastName  string    `json:"lastName"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
+	Role      string    `json:"role"` // Added role field
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type RegisterUserPayload struct {
+    FirstName string `json:"firstName" validate:"required"`
+    LastName  string `json:"lastName" validate:"required"`
+    Email     string `json:"email" validate:"required,email"`
+    Password string `json:"password" validate:"required,min=8,containsany=!@#$%^&*"`
+    Role      string `json:"role" validate:"oneof=admin user"`
 }
 
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserByID(id int) (*User, error)
 	CreateUser(User) error
-}
-
-type RegisterUserPayload struct {
-	FirstName string `json:"firstName" validate:"required"`
-	LastName  string `json:"lastName" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=3,max=130"`
 }
 
 type LoginUserPayload struct {
@@ -44,11 +46,11 @@ type Product struct {
 }
 
 type ProductStore interface {
-	// GetProductByID(id int) (*Product, error)
 	GetProductsByIDs(ids []int) ([]Product, error)
 	GetProducts() ([]*Product, error)
 	CreateProduct(CreateProductPayload) error
 	UpdateProduct(Product) error
+	DeleteProduct(productID int) error
 }
 
 type CreateProductPayload struct {
@@ -62,6 +64,10 @@ type CreateProductPayload struct {
 type OrderStore interface {
 	CreateOrder(Order) (int, error)
 	CreateOrderItem(OrderItem) error
+	GetOrdersByUserID(userID int) ([]Order, error)
+	GetOrderByID(orderID int) (*Order, error)
+	UpdateOrderStatus(orderID int, status string) error
+	CancelOrder(orderID int, userID int) error
 }
 
 type Order struct {
@@ -80,6 +86,10 @@ type OrderItem struct {
 	Quantity  int       `json:"quantity"`
 	Price     float64   `json:"price"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type UpdateOrderStatusPayload struct {
+	Status string `json:"status" validate:"required,oneof=pending shipped delivered cancelled"`
 }
 
 type CartCheckoutPayload struct {
