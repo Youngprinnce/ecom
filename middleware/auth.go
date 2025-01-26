@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/youngprinnce/go-ecom/config"
 	"github.com/youngprinnce/go-ecom/utils"
@@ -20,11 +20,12 @@ const (
 )
 
 // JWTAuth middleware validates the JWT token and sets the userID and role in the request context.
-func JWTAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := utils.GetTokenFromRequest(r)
+func JWTAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := utils.GetTokenFromRequest(c.Request)
 		if tokenString == "" {
-			utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("missing token"))
+			utils.WriteError(c.Writer, http.StatusUnauthorized, fmt.Errorf("missing token"))
+			c.Abort()
 			return
 		}
 
@@ -33,7 +34,8 @@ func JWTAuth(next http.Handler) http.Handler {
 			return []byte(config.Envs.JWT_SECRET), nil
 		})
 		if err != nil || !token.Valid {
-			utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid token"))
+			utils.WriteError(c.Writer, http.StatusUnauthorized, fmt.Errorf("invalid token"))
+			c.Abort()
 			return
 		}
 
@@ -44,14 +46,16 @@ func JWTAuth(next http.Handler) http.Handler {
 		str, ok := claims["userID"].(float64)
 		if !ok {
 			log.Printf("failed to extract userID from token claims")
-			permissionDenied(w)
+			permissionDenied(c.Writer)
+			c.Abort()
 			return
 		}
 
 		role, ok := claims["role"].(string)
 		if !ok {
 			log.Printf("failed to extract role from token claims")
-			permissionDenied(w)
+			permissionDenied(c.Writer)
+			c.Abort()
 			return
 		}
 
@@ -59,41 +63,43 @@ func JWTAuth(next http.Handler) http.Handler {
 		userID := int(str)
 		if err != nil {
 			log.Printf("failed to convert userID to int: %v", err)
-			permissionDenied(w)
+			permissionDenied(c.Writer)
+			c.Abort()
 			return
 		}
 
 		// Add userID and role to the request context
-		ctx := context.WithValue(r.Context(), UserKey, userID)
-		ctx = context.WithValue(ctx, RoleKey, role)
-		r = r.WithContext(ctx)
+		c.Set(string(UserKey), userID)
+		c.Set(string(RoleKey), role)
 
 		// Call the next handler
-		next.ServeHTTP(w, r)
-	})
+		c.Next()
+	}
 }
 
 // AdminOnly middleware ensures that only users with the "admin" role can access the route.
-func AdminOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func AdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		// Retrieve role from the request context
-		role, ok := r.Context().Value(RoleKey).(string)
-		if !ok {
+		role, exists := c.Get(string(RoleKey))
+		if !exists {
 			log.Printf("failed to retrieve role from context")
-			permissionDenied(w)
+			permissionDenied(c.Writer)
+			c.Abort()
 			return
 		}
 
 		// Check if the user is an admin
 		if role != "admin" {
 			log.Printf("user does not have admin role")
-			permissionDenied(w)
+			permissionDenied(c.Writer)
+			c.Abort()
 			return
 		}
 
 		// Call the next handler
-		next.ServeHTTP(w, r)
-	})
+		c.Next()
+	}
 }
 
 // permissionDenied writes a "permission denied" error response.

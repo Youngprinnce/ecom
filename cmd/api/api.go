@@ -3,9 +3,8 @@ package api
 import (
 	"database/sql"
 	"log"
-	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/youngprinnce/go-ecom/controller/order"
 	"github.com/youngprinnce/go-ecom/controller/product"
 	"github.com/youngprinnce/go-ecom/controller/user"
@@ -25,26 +24,26 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 }
 
 func (s *APIServer) Run() error {
-	router := mux.NewRouter()
+	router := gin.Default()
 
 	// Apply the Logging middleware to all routes
-	router.Use(middleware.Logging)
-	
-	subrouter := router.PathPrefix("/api/v1").Subrouter()
+	router.Use(middleware.Logging())
+
+	api := router.Group("/api/v1")
 
 	userStore := user.NewStore(s.db)
 	userHandler := user.NewHandler(userStore)
-	userHandler.RegisterRoutes(subrouter)
+	userHandler.RegisterRoutes(api)
 
 	productStore := product.NewStore(s.db)
 	productHandler := product.NewHandler(productStore)
-	productHandler.RegisterRoutes(subrouter)
+	productHandler.RegisterRoutes(api)
 
 	orderStore := order.NewStore(s.db)
 	orderHandler := order.NewHandler(productStore, orderStore, userStore)
-	orderHandler.RegisterRoutes(subrouter)
+	orderHandler.RegisterRoutes(api)
 
 	log.Println("Listening on", s.addr)
 
-	return http.ListenAndServe(s.addr, router)
+	return router.Run(s.addr)
 }

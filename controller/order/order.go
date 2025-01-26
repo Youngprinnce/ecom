@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/youngprinnce/go-ecom/middleware"
 	"github.com/youngprinnce/go-ecom/types"
 	"github.com/youngprinnce/go-ecom/utils"
@@ -25,41 +25,41 @@ func NewHandler(productStore types.ProductStore, orderStore types.OrderStore, us
 	}
 }
 
-func (h *Handler) RegisterRoutes(router *mux.Router) {
+func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	// Apply JWTAuth middleware to all order routes
-	orderRouter := router.PathPrefix("/orders").Subrouter()
-	orderRouter.Use(middleware.JWTAuth)
+	orderRouter := router.Group("/orders")
+	orderRouter.Use(middleware.JWTAuth())
 
 	// Authenticated routes
-	orderRouter.HandleFunc("", h.handleGetOrders).Methods(http.MethodGet)
-	orderRouter.HandleFunc("", h.handleCreateOrder).Methods(http.MethodPost)
-	orderRouter.HandleFunc("/{id}", h.handleCancelOrder).Methods(http.MethodDelete)
+	orderRouter.GET("", h.handleGetOrders)
+	orderRouter.POST("", h.handleCreateOrder)
+	orderRouter.DELETE("/:id", h.handleCancelOrder)
 
 	// Admin-only route
-	adminRouter := orderRouter.PathPrefix("/{id}/status").Subrouter()
-	adminRouter.Use(middleware.AdminOnly)
-	adminRouter.HandleFunc("", h.handleUpdateOrderStatus).Methods(http.MethodPut)
+	adminRouter := orderRouter.Group("/:id/status")
+	adminRouter.Use(middleware.AdminOnly())
+	adminRouter.PUT("", h.handleUpdateOrderStatus)
 }
 
 // handleCheckout handles the checkout process for the cart.
-func (h *Handler) handleCreateOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleCreateOrder(c *gin.Context) {
 	// Retrieve userID from the request context
-	userID, ok := r.Context().Value(middleware.UserKey).(int)
-	if !ok {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
+	userID, exists := c.Get(string(middleware.UserKey))
+	if !exists {
+		utils.WriteError(c.Writer, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
 		return
 	}
 
 	// Parse the request payload
 	var payload types.CartCheckoutPayload
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.WriteError(c.Writer, http.StatusBadRequest, err)
 		return
 	}
 
 	// Validate the payload
 	if len(payload.Items) == 0 {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("cart is empty"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("cart is empty"))
 		return
 	}
 
@@ -69,100 +69,98 @@ func (h *Handler) handleCreateOrder(w http.ResponseWriter, r *http.Request) {
 	// Fetch products from the database
 	products, err := h.productStore.GetProductsByIDs(productIDs)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Create the order
-	orderID, total, err := h.createOrder(products, payload.Items, userID)
+	orderID, total, err := h.createOrder(products, payload.Items, userID.(int))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Return the order ID and total price
-	utils.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	utils.WriteJSON(c.Writer, http.StatusOK, map[string]interface{}{
 		"orderID":    orderID,
 		"totalPrice": total,
 	})
 }
 
-func (h *Handler) handleGetOrders(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetOrders(c *gin.Context) {
 	// Retrieve userID from the request context
-	userID, ok := r.Context().Value(middleware.UserKey).(int)
-	if !ok {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
+	userID, exists := c.Get(string(middleware.UserKey))
+	if !exists {
+		utils.WriteError(c.Writer, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
 		return
 	}
 
 	// Fetch orders for the user
-	orders, err := h.orderStore.GetOrdersByUserID(userID)
+	orders, err := h.orderStore.GetOrdersByUserID(userID.(int))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Return the orders
-	utils.WriteJSON(w, http.StatusOK, orders)
+	utils.WriteJSON(c.Writer, http.StatusOK, orders)
 }
 
-func (h *Handler) handleUpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleUpdateOrderStatus(c *gin.Context) {
 	// Extract order ID from the URL
-	vars := mux.Vars(r)
-	orderID, err := strconv.Atoi(vars["id"])
+	orderID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid order ID"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid order ID"))
 		return
 	}
 
 	// Parse the request payload
 	var payload types.UpdateOrderStatusPayload
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.WriteError(c.Writer, http.StatusBadRequest, err)
 		return
 	}
 
 	// Update the order status
 	if err := h.orderStore.UpdateOrderStatus(orderID, payload.Status); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
 	// Return success response
-	utils.WriteJSON(w, http.StatusOK, map[string]string{"status": "updated"})
+	utils.WriteJSON(c.Writer, http.StatusOK, map[string]string{"status": "updated"})
 }
 
-func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleCancelOrder(c *gin.Context) {
 	// Retrieve userID from the request context
-	userID, ok := r.Context().Value(middleware.UserKey).(int)
-	if !ok {
-		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
+	userID, exists := c.Get(string(middleware.UserKey))
+	if !exists {
+		utils.WriteError(c.Writer, http.StatusUnauthorized, fmt.Errorf("invalid user ID"))
 		return
 	}
 
 	// Extract order ID from the URL
-	vars := mux.Vars(r)
-	orderID, err := strconv.Atoi(vars["id"])
+	orderID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid order ID"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid order ID"))
 		return
 	}
 
 	order, err := h.orderStore.GetOrderByID(orderID)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("order not found"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("order not found"))
 		return
 	}
 
 	if order.Status != "pending" {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("order is not pending, can't cancel"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("order is not pending, can't cancel"))
 		return
 	}
 
 	// restore product quantities
 	orderItems, err := h.orderStore.GetOrderItemsByOrderID(orderID)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -171,7 +169,7 @@ func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 	for _, item := range orderItems {
 		product, err := h.productStore.GetProductByID(item.ProductID)
 		if err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 			return
 		}
 		productMap[product.ID] = product
@@ -183,18 +181,18 @@ func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 		product.Quantity += item.Quantity
 
 		if err := h.productStore.UpdateProduct(*product); err != nil {
-			utils.WriteError(w, http.StatusInternalServerError, err)
+			utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
 	// Cancel the order
-	if err := h.orderStore.CancelOrder(orderID, userID); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	if err := h.orderStore.CancelOrder(orderID, userID.(int)); err != nil {
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Writer.WriteHeader(http.StatusNoContent)
 }
 
 // getCartItemsProductIDs extracts product IDs from the cart items.

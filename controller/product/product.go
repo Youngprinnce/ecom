@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/youngprinnce/go-ecom/types"
 	"github.com/youngprinnce/go-ecom/utils"
@@ -20,46 +20,44 @@ func NewHandler(store types.ProductStore) *Handler {
 	return &Handler{store: store}
 }
 
-func (h *Handler) RegisterRoutes(router *mux.Router) {
+func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	// Create a subrouter for product routes
-	productRouter := router.PathPrefix("/products").Subrouter()
+	productRouter := router.Group("/products")
+	productRouter.Use(middleware.JWTAuth(), middleware.AdminOnly()) // Require JWT authentication with admin privileges
 
-	// Apply middleware to the entire subrouter
-	productRouter.Use(middleware.JWTAuth, middleware.AdminOnly)    // Require JWT authentication with admin privileges
-
-	productRouter.HandleFunc("", h.handleGetProducts).Methods(http.MethodGet)
-	productRouter.HandleFunc("", h.handleCreateProduct).Methods(http.MethodPost)
-	productRouter.HandleFunc("/{id}", h.handleUpdateProduct).Methods(http.MethodPut)
-	productRouter.HandleFunc("/{id}", h.handleDeleteProduct).Methods(http.MethodDelete)
+	productRouter.GET("", h.handleGetProducts)
+	productRouter.POST("", h.handleCreateProduct)
+	productRouter.PUT("/:id", h.handleUpdateProduct)
+	productRouter.DELETE("/:id", h.handleDeleteProduct)
 }
 
 // handleGetProducts retrieves all products (public access)
-func (h *Handler) handleGetProducts(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleGetProducts(c *gin.Context) {
 	products, err := h.store.GetProducts()
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, products)
+	utils.WriteJSON(c.Writer, http.StatusOK, products)
 }
 
 // handleCreateProduct creates a new product (admin only)
-func (h *Handler) handleCreateProduct(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) handleCreateProduct(c *gin.Context) {
 	var p types.CreateProductPayload
-	if err := utils.ParseJSON(r, &p); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := c.ShouldBindJSON(&p); err != nil {
+		utils.WriteError(c.Writer, http.StatusBadRequest, err)
 		return
 	}
 
 	// Validate the payload
 	if err := utils.Validate.Struct(p); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", err))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", err))
 		return
 	}
 
 	// Create the product
 	if err := h.store.CreateProduct(p); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -71,27 +69,26 @@ func (h *Handler) handleCreateProduct(w http.ResponseWriter, r *http.Request) {
 		"quantity":    p.Quantity,
 	}).Info("New product created")
 
-	utils.WriteJSON(w, http.StatusCreated, p)
+	utils.WriteJSON(c.Writer, http.StatusCreated, p)
 }
 
 // handleUpdateProduct updates an existing product (admin only)
-func (h *Handler) handleUpdateProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productID, err := strconv.Atoi(vars["id"])
+func (h *Handler) handleUpdateProduct(c *gin.Context) {
+	productID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid product ID"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid product ID"))
 		return
 	}
 
 	var payload types.CreateProductPayload
-	if err := utils.ParseJSON(r, &payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		utils.WriteError(c.Writer, http.StatusBadRequest, err)
 		return
 	}
 
 	// Validate the payload
 	if err := utils.Validate.Struct(payload); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", err))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", err))
 		return
 	}
 
@@ -106,7 +103,7 @@ func (h *Handler) handleUpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.store.UpdateProduct(product); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -119,21 +116,20 @@ func (h *Handler) handleUpdateProduct(w http.ResponseWriter, r *http.Request) {
 		"quantity":    product.Quantity,
 	}).Info("Product updated")
 
-	utils.WriteJSON(w, http.StatusOK, product)
+	utils.WriteJSON(c.Writer, http.StatusOK, product)
 }
 
 // handleDeleteProduct deletes a product (admin only)
-func (h *Handler) handleDeleteProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productID, err := strconv.Atoi(vars["id"])
+func (h *Handler) handleDeleteProduct(c *gin.Context) {
+	productID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid product ID"))
+		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid product ID"))
 		return
 	}
 
 	// Delete the product
 	if err := h.store.DeleteProduct(productID); err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -142,5 +138,5 @@ func (h *Handler) handleDeleteProduct(w http.ResponseWriter, r *http.Request) {
 		"productID": productID,
 	}).Info("Product deleted")
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Writer.WriteHeader(http.StatusNoContent)
 }
