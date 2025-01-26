@@ -51,6 +51,7 @@ type ProductStore interface {
 	CreateProduct(CreateProductPayload) error
 	UpdateProduct(Product) error
 	DeleteProduct(productID int) error
+	GetProductByID(id int) (*Product, error)
 }
 
 type CreateProductPayload struct {
@@ -68,6 +69,7 @@ type OrderStore interface {
 	GetOrderByID(orderID int) (*Order, error)
 	UpdateOrderStatus(orderID int, status string) error
 	CancelOrder(orderID int, userID int) error
+	GetOrderItemsByOrderID(orderID int) ([]OrderItem, error)
 }
 
 type Order struct {

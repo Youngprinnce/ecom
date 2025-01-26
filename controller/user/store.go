@@ -16,7 +16,7 @@ func NewStore(db *sql.DB) *Store {
 }
 
 func (s *Store) CreateUser(user types.User) error {
-	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)", user.FirstName, user.LastName, user.Email, user.Password)
+	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)", user.FirstName, user.LastName, user.Email, user.Password, user.Role)
 	if err != nil {
 		return err
 	}
@@ -56,6 +56,7 @@ func (s *Store) GetUserByID(id int) (*types.User, error) {
 		&u.LastName,
 		&u.Email,
 		&u.Password,
+		&u.Role,
 		&u.CreatedAt,
 	)
 	if err == sql.ErrNoRows {

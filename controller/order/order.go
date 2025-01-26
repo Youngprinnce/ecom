@@ -148,6 +148,48 @@ func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	order, err := h.orderStore.GetOrderByID(orderID)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("order not found"))
+		return
+	}
+
+	if order.Status != "pending" {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("order is not pending, can't cancel"))
+		return
+	}
+
+	// restore product quantities
+	orderItems, err := h.orderStore.GetOrderItemsByOrderID(orderID)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Create a map of products for quick lookup
+	productMap := make(map[int]*types.Product)
+	for _, item := range orderItems {
+		product, err := h.productStore.GetProductByID(item.ProductID)
+		if err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+		productMap[product.ID] = product
+	}
+
+
+	// Update product quantities
+	for _, item := range orderItems {
+		product := productMap[item.ProductID]
+		product.Quantity += item.Quantity
+
+		if err := h.productStore.UpdateProduct(*product); err != nil {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+
 	// Cancel the order
 	if err := h.orderStore.CancelOrder(orderID, userID); err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)

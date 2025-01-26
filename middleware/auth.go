@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/youngprinnce/go-ecom/config"
@@ -42,7 +41,7 @@ func JWTAuth(next http.Handler) http.Handler {
 		claims := token.Claims.(jwt.MapClaims)
 
 		// Extract userID and role from claims
-		str, ok := claims["userID"].(string)
+		str, ok := claims["userID"].(float64)
 		if !ok {
 			log.Printf("failed to extract userID from token claims")
 			permissionDenied(w)
@@ -57,7 +56,7 @@ func JWTAuth(next http.Handler) http.Handler {
 		}
 
 		// Convert userID to int
-		userID, err := strconv.Atoi(str)
+		userID := int(str)
 		if err != nil {
 			log.Printf("failed to convert userID to int: %v", err)
 			permissionDenied(w)

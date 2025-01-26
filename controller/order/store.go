@@ -54,6 +54,41 @@ func (s *Store) CreateOrderItem(orderItem types.OrderItem) error {
 	return nil
 }
 
+// GetOrderItemByOrderID retrieves all order items for a specific order.
+func (s *Store) GetOrderItemsByOrderID(orderID int) ([]types.OrderItem, error) {
+	ctx := context.Background()
+
+	// Query the database for order item by order ID
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, orderId, productId, quantity, price
+		FROM order_items
+		WHERE orderId = ?
+	`, orderID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query order items: %w", err)
+	}
+	defer rows.Close()
+
+	// Parse the rows into a slice of OrderItem structs
+	orderItems := make([]types.OrderItem, 0)
+	for rows.Next() {
+		var orderItem types.OrderItem
+		if err := rows.Scan(
+			&orderItem.ID,
+			&orderItem.OrderID,
+			&orderItem.ProductID,
+			&orderItem.Quantity,
+			&orderItem.Price,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan order item: %w", err)
+		}
+		orderItems = append(orderItems, orderItem)
+	}
+
+	return orderItems, nil
+}
+
+
 // GetOrdersByUserID retrieves all orders for a specific user.
 func (s *Store) GetOrdersByUserID(userID int) ([]types.Order, error) {
 	ctx := context.Background()
