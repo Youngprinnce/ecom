@@ -118,7 +118,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
 ### User Management
 
 #### Register a New User
-- **Endpoint**: `POST /register`
+- **Endpoint**: `POST /users/register`
 - **Request Body**:
   ```json
   {
@@ -137,7 +137,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
   ```
 
 #### Login
-- **Endpoint**: `POST /login`
+- **Endpoint**: `POST /users/login`
 - **Request Body**:
   ```json
   {

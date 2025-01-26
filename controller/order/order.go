@@ -177,7 +177,6 @@ func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 		productMap[product.ID] = product
 	}
 
-
 	// Update product quantities
 	for _, item := range orderItems {
 		product := productMap[item.ProductID]
@@ -188,7 +187,6 @@ func (h *Handler) handleCancelOrder(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 
 	// Cancel the order
 	if err := h.orderStore.CancelOrder(orderID, userID); err != nil {

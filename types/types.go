@@ -91,7 +91,7 @@ type OrderItem struct {
 }
 
 type UpdateOrderStatusPayload struct {
-	Status string `json:"status" validate:"required,oneof=pending shipped delivered cancelled"`
+	Status string `json:"status" validate:"required,oneof=pending successful cancelled"`
 }
 
 type CartCheckoutPayload struct {
