@@ -110,24 +110,15 @@ definitions:
     required:
     - status
     type: object
-  types.User:
-    properties:
-      createdAt:
-        type: string
-      email:
-        type: string
-      firstName:
-        type: string
-      id:
-        type: integer
-      lastName:
-        type: string
-      role:
-        description: Added role field
-        type: string
-    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
 info:
   contact: {}
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
 paths:
   /orders:
     get:
@@ -154,7 +145,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Get all orders
       tags:
       - orders
@@ -196,7 +187,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Create a new order
       tags:
       - orders
@@ -233,7 +224,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Cancel an order
       tags:
       - orders
@@ -288,7 +279,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Update order status
       tags:
       - orders
@@ -311,7 +302,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Get all products
       tags:
       - products
@@ -346,7 +337,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Create a new product
       tags:
       - products
@@ -377,7 +368,7 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Delete a product
       tags:
       - products
@@ -417,41 +408,10 @@ paths:
               type: string
             type: object
       security:
-      - ApiKeyAuth: []
+      - apiKey: []
       summary: Update a product
       tags:
       - products
-  /users/{userID}:
-    get:
-      description: Get a user by ID
-      parameters:
-      - description: User ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: user details
-          schema:
-            $ref: '#/definitions/types.User'
-        "400":
-          description: invalid user ID
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get user
-      tags:
-      - users
   /users/login:
     post:
       consumes:
@@ -476,20 +436,17 @@ paths:
         "400":
           description: invalid payload
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "401":
           description: invalid email or password
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "500":
           description: internal server error
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: Login
       tags:
@@ -512,28 +469,30 @@ paths:
         "201":
           description: user created
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "400":
           description: invalid payload
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "409":
           description: user already exists
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "500":
           description: internal server error
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: Register
       tags:
       - users
+securityDefinitions:
+  apiKey:
+    description: JWT token for authentication
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

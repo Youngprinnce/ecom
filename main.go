@@ -9,7 +9,23 @@ import (
 	"github.com/youngprinnce/go-ecom/cmd/api"
 	"github.com/youngprinnce/go-ecom/config"
 	"github.com/youngprinnce/go-ecom/db"
+
+	_ "github.com/youngprinnce/go-ecom/docs"
 )
+
+
+//	@termsOfService	http://swagger.io/terms/
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@externalDocs.description	OpenAPI
+//	@externalDocs.url			https://swagger.io/resources/open-api/
+
+//	@securityDefinitions.apiKey	apiKey
+//	@in							header
+//	@name						Authorization
+//	@description				JWT token for authentication
 
 func main() {
 	cfg := mysql.Config{

@@ -3,7 +3,6 @@ package user
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -29,17 +28,18 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // handleLogin handles user login.
-// @Summary Login
-// @Description Login with email and password
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param payload body types.LoginUserPayload true "Login payload"
-// @Success 200 {object} map[string]string "token"
-// @Failure 400 {object} map[string]string "invalid payload"
-// @Failure 401 {object} map[string]string "invalid email or password"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /users/login [post]
+//
+//	@Summary		Login
+//	@Description	Login with email and password
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		types.LoginUserPayload	true	"Login payload"
+//	@Success		200		{object}	map[string]string		"token"
+//	@Failure		400		{object}	map[string]any			"invalid payload"
+//	@Failure		401		{object}	map[string]any			"invalid email or password"
+//	@Failure		500		{object}	map[string]any			"internal server error"
+//	@Router			/users/login [post]
 func (h *Handler) handleLogin(c *gin.Context) {
 	var user types.LoginUserPayload
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -82,17 +82,18 @@ func (h *Handler) handleLogin(c *gin.Context) {
 }
 
 // handleRegister handles user registration.
-// @Summary Register
-// @Description Register a new user
-// @Tags users
-// @Accept json
-// @Produce json
-// @Param payload body types.RegisterUserPayload true "Register payload"
-// @Success 201 {object} map[string]string "user created"
-// @Failure 400 {object} map[string]string "invalid payload"
-// @Failure 409 {object} map[string]string "user already exists"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /users/register [post]
+//
+//	@Summary		Register
+//	@Description	Register a new user
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		types.RegisterUserPayload	true	"Register payload"
+//	@Success		201		{object}	map[string]any				"user created"
+//	@Failure		400		{object}	map[string]any				"invalid payload"
+//	@Failure		409		{object}	map[string]any				"user already exists"
+//	@Failure		500		{object}	map[string]any				"internal server error"
+//	@Router			/users/register [post]
 func (h *Handler) handleRegister(c *gin.Context) {
 	var user types.RegisterUserPayload
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -145,31 +146,5 @@ func (h *Handler) handleRegister(c *gin.Context) {
 	utils.Log.WithFields(logrus.Fields{
 		"email": user.Email,
 	}).Info("New user registered")
-	utils.WriteJSON(c.Writer, http.StatusCreated, "user created")
-}
-
-// handleGetUser retrieves a user by ID.
-// @Summary Get user
-// @Description Get a user by ID
-// @Tags users
-// @Produce json
-// @Param userID path int true "User ID"
-// @Success 200 {object} types.User "user details"
-// @Failure 400 {object} map[string]string "invalid user ID"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /users/{userID} [get]
-func (h *Handler) handleGetUser(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("userID"))
-	if err != nil {
-		utils.WriteError(c.Writer, http.StatusBadRequest, fmt.Errorf("invalid user ID"))
-		return
-	}
-
-	user, err := h.store.GetUserByID(userID)
-	if err != nil {
-		utils.WriteError(c.Writer, http.StatusInternalServerError, err)
-		return
-	}
-
-	utils.WriteJSON(c.Writer, http.StatusOK, user)
+	utils.WriteJSON(c.Writer, http.StatusCreated, map[string]any{"message": "user created", "success": true})
 }

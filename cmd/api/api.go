@@ -5,13 +5,13 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/youngprinnce/go-ecom/controller/order"
 	"github.com/youngprinnce/go-ecom/controller/product"
 	"github.com/youngprinnce/go-ecom/controller/user"
+	"github.com/youngprinnce/go-ecom/docs"
 	"github.com/youngprinnce/go-ecom/middleware"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
-	_ "github.com/youngprinnce/go-ecom/docs" // Import the generated docs
 )
 
 type APIServer struct {
@@ -26,18 +26,15 @@ func NewAPIServer(addr string, db *sql.DB) *APIServer {
 	}
 }
 
-// @title Go E-Commerce API
-// @version 1.0
-// @description This is a sample e-commerce API.
-// @termsOfService http://swagger.io/terms/
-// @contact.name API Support
-// @contact.email support@ecom.com
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host localhost:8080
-// @BasePath /api/v1
 func (s *APIServer) Run() error {
 	router := gin.Default()
+
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Schemes = []string{"http"}
+	docs.SwaggerInfo.Host = "localhost:8080"
+	docs.SwaggerInfo.Title = "Go E-Commerce API"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Description = "This is a sample e-commerce API."
 
 	// Apply the Logging middleware to all routes
 	router.Use(middleware.Logging())

@@ -42,18 +42,18 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // handleCreateOrder handles the checkout process for the cart.
-// @Summary Create a new order
-// @Description Create a new order with the items in the cart
-// @Tags orders
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param payload body types.CartCheckoutPayload true "Cart checkout payload"
-// @Success 200 {object} map[string]interface{} "orderID and totalPrice"
-// @Failure 400 {object} map[string]string "invalid request payload"
-// @Failure 401 {object} map[string]string "unauthorized"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /orders [post]
+//	@Summary		Create a new order
+//	@Description	Create a new order with the items in the cart
+//	@Tags			orders
+//	@Accept			json
+//	@Produce		json
+//	@Security		apiKey
+//	@Param			payload	body		types.CartCheckoutPayload	true	"Cart checkout payload"
+//	@Success		200		{object}	map[string]interface{}		"orderID and totalPrice"
+//	@Failure		400		{object}	map[string]string			"invalid request payload"
+//	@Failure		401		{object}	map[string]string			"unauthorized"
+//	@Failure		500		{object}	map[string]string			"internal server error"
+//	@Router			/orders [post]
 func (h *Handler) handleCreateOrder(c *gin.Context) {
 	// Retrieve userID from the request context
 	userID, exists := c.Get(string(middleware.UserKey))
@@ -100,15 +100,15 @@ func (h *Handler) handleCreateOrder(c *gin.Context) {
 }
 
 // handleGetOrders retrieves all orders for the user.
-// @Summary Get all orders
-// @Description Get all orders for the authenticated user
-// @Tags orders
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {array} types.Order "list of orders"
-// @Failure 401 {object} map[string]string "unauthorized"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /orders [get]
+//	@Summary		Get all orders
+//	@Description	Get all orders for the authenticated user
+//	@Tags			orders
+//	@Produce		json
+//	@Security		apiKey
+//	@Success		200	{array}		types.Order			"list of orders"
+//	@Failure		401	{object}	map[string]string	"unauthorized"
+//	@Failure		500	{object}	map[string]string	"internal server error"
+//	@Router			/orders [get]
 func (h *Handler) handleGetOrders(c *gin.Context) {
 	// Retrieve userID from the request context
 	userID, exists := c.Get(string(middleware.UserKey))
@@ -129,20 +129,20 @@ func (h *Handler) handleGetOrders(c *gin.Context) {
 }
 
 // handleUpdateOrderStatus updates the status of an order.
-// @Summary Update order status
-// @Description Update the status of an order (admin only)
-// @Tags orders
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param id path int true "Order ID"
-// @Param payload body types.UpdateOrderStatusPayload true "Order status payload"
-// @Success 200 {object} map[string]string "status updated"
-// @Failure 400 {object} map[string]string "invalid order ID or payload"
-// @Failure 401 {object} map[string]string "unauthorized"
-// @Failure 403 {object} map[string]string "forbidden"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /orders/{id}/status [put]
+//	@Summary		Update order status
+//	@Description	Update the status of an order (admin only)
+//	@Tags			orders
+//	@Accept			json
+//	@Produce		json
+//	@Security		apiKey
+//	@Param			id		path		int								true	"Order ID"
+//	@Param			payload	body		types.UpdateOrderStatusPayload	true	"Order status payload"
+//	@Success		200		{object}	map[string]string				"status updated"
+//	@Failure		400		{object}	map[string]string				"invalid order ID or payload"
+//	@Failure		401		{object}	map[string]string				"unauthorized"
+//	@Failure		403		{object}	map[string]string				"forbidden"
+//	@Failure		500		{object}	map[string]string				"internal server error"
+//	@Router			/orders/{id}/status [put]
 func (h *Handler) handleUpdateOrderStatus(c *gin.Context) {
 	// Extract order ID from the URL
 	orderID, err := strconv.Atoi(c.Param("id"))
@@ -169,17 +169,17 @@ func (h *Handler) handleUpdateOrderStatus(c *gin.Context) {
 }
 
 // handleCancelOrder cancels an order.
-// @Summary Cancel an order
-// @Description Cancel an order if it is still in the "pending" status
-// @Tags orders
-// @Produce json
-// @Security ApiKeyAuth
-// @Param id path int true "Order ID"
-// @Success 204 "no content"
-// @Failure 400 {object} map[string]string "invalid order ID or order not pending"
-// @Failure 401 {object} map[string]string "unauthorized"
-// @Failure 500 {object} map[string]string "internal server error"
-// @Router /orders/{id} [delete]
+//	@Summary		Cancel an order
+//	@Description	Cancel an order if it is still in the "pending" status
+//	@Tags			orders
+//	@Produce		json
+//	@Security		apiKey
+//	@Param			id	path	int	true	"Order ID"
+//	@Success		204	"no content"
+//	@Failure		400	{object}	map[string]string	"invalid order ID or order not pending"
+//	@Failure		401	{object}	map[string]string	"unauthorized"
+//	@Failure		500	{object}	map[string]string	"internal server error"
+//	@Router			/orders/{id} [delete]
 func (h *Handler) handleCancelOrder(c *gin.Context) {
 	// Retrieve userID from the request context
 	userID, exists := c.Get(string(middleware.UserKey))
@@ -241,7 +241,8 @@ func (h *Handler) handleCancelOrder(c *gin.Context) {
 		return
 	}
 
-	c.Writer.WriteHeader(http.StatusNoContent)
+	// Return success response
+	utils.WriteJSON(c.Writer, http.StatusOK, map[string]string{"message": "order cancelled"})
 }
 
 
