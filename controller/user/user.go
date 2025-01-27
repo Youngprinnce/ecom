@@ -28,6 +28,18 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	userRouter.POST("/register", h.handleRegister)
 }
 
+// handleLogin handles user login.
+// @Summary Login
+// @Description Login with email and password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param payload body types.LoginUserPayload true "Login payload"
+// @Success 200 {object} map[string]string "token"
+// @Failure 400 {object} map[string]string "invalid payload"
+// @Failure 401 {object} map[string]string "invalid email or password"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /users/login [post]
 func (h *Handler) handleLogin(c *gin.Context) {
 	var user types.LoginUserPayload
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -69,6 +81,18 @@ func (h *Handler) handleLogin(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusOK, map[string]string{"token": token})
 }
 
+// handleRegister handles user registration.
+// @Summary Register
+// @Description Register a new user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param payload body types.RegisterUserPayload true "Register payload"
+// @Success 201 {object} map[string]string "user created"
+// @Failure 400 {object} map[string]string "invalid payload"
+// @Failure 409 {object} map[string]string "user already exists"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /users/register [post]
 func (h *Handler) handleRegister(c *gin.Context) {
 	var user types.RegisterUserPayload
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -124,6 +148,16 @@ func (h *Handler) handleRegister(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusCreated, "user created")
 }
 
+// handleGetUser retrieves a user by ID.
+// @Summary Get user
+// @Description Get a user by ID
+// @Tags users
+// @Produce json
+// @Param userID path int true "User ID"
+// @Success 200 {object} types.User "user details"
+// @Failure 400 {object} map[string]string "invalid user ID"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /users/{userID} [get]
 func (h *Handler) handleGetUser(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {

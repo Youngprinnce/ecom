@@ -31,7 +31,15 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	productRouter.DELETE("/:id", h.handleDeleteProduct)
 }
 
-// handleGetProducts retrieves all products (public access)
+// handleGetProducts retrieves all products.
+// @Summary Get all products
+// @Description Get all products
+// @Tags products
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {array} types.Product "list of products"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /products [get]
 func (h *Handler) handleGetProducts(c *gin.Context) {
 	products, err := h.store.GetProducts()
 	if err != nil {
@@ -41,7 +49,18 @@ func (h *Handler) handleGetProducts(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusOK, products)
 }
 
-// handleCreateProduct creates a new product (admin only)
+// handleCreateProduct creates a new product.
+// @Summary Create a new product
+// @Description Create a new product (admin only)
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param payload body types.CreateProductPayload true "Product payload"
+// @Success 201 {object} types.CreateProductPayload "created product"
+// @Failure 400 {object} map[string]string "invalid request payload"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /products [post]
 func (h *Handler) handleCreateProduct(c *gin.Context) {
 	var p types.CreateProductPayload
 	if err := c.ShouldBindJSON(&p); err != nil {
@@ -72,7 +91,19 @@ func (h *Handler) handleCreateProduct(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusCreated, p)
 }
 
-// handleUpdateProduct updates an existing product (admin only)
+// handleUpdateProduct updates an existing product.
+// @Summary Update a product
+// @Description Update an existing product (admin only)
+// @Tags products
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "Product ID"
+// @Param payload body types.CreateProductPayload true "Product payload"
+// @Success 200 {object} types.Product "updated product"
+// @Failure 400 {object} map[string]string "invalid product ID or payload"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /products/{id} [put]
 func (h *Handler) handleUpdateProduct(c *gin.Context) {
 	productID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -119,7 +150,17 @@ func (h *Handler) handleUpdateProduct(c *gin.Context) {
 	utils.WriteJSON(c.Writer, http.StatusOK, product)
 }
 
-// handleDeleteProduct deletes a product (admin only)
+// handleDeleteProduct deletes a product.
+// @Summary Delete a product
+// @Description Delete a product (admin only)
+// @Tags products
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "Product ID"
+// @Success 204 "no content"
+// @Failure 400 {object} map[string]string "invalid product ID"
+// @Failure 500 {object} map[string]string "internal server error"
+// @Router /products/{id} [delete]
 func (h *Handler) handleDeleteProduct(c *gin.Context) {
 	productID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
