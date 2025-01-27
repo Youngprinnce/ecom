@@ -30,8 +30,8 @@ A lightweight, scalable, and modular e-commerce API built with **Golang**. This 
 - **Migrations**:
   - Database schema migrations using `golang-migrate`.
 
- - **Documentation**:
-  - Documentation from Swagger can be gotten from  `http://localhost:8080/swagger/index.html`.
+- **Documentation**:
+  - Swagger documentation available at `http://localhost:8080/swagger/index.html`.
 
 ---
 
@@ -121,7 +121,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
 ### User Management
 
 #### Register a New User
-- **Endpoint**: `POST /users/register`
+- **Endpoint**: `POST /api/v1/users/register`
 - **Request Body**:
   ```json
   {
@@ -129,18 +129,18 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
     "lastName": "Doe",
     "email": "john.doe@example.com",
     "password": "password123",
-    "role": "user" | "admin"
+    "role": "user"
   }
   ```
 - **Response**:
   ```json
   {
-    "message": "User registered successfully"
+    "message": "user created"
   }
   ```
 
 #### Login
-- **Endpoint**: `POST /users/login`
+- **Endpoint**: `POST /api/v1/users/login`
 - **Request Body**:
   ```json
   {
@@ -155,10 +155,26 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
   }
   ```
 
+#### Get User by ID
+- **Endpoint**: `GET /api/v1/users/{userID}`
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "role": "user",
+    "createdAt": "2023-10-01T12:00:00Z"
+  }
+  ```
+
+---
+
 ### Product Management
 
 #### Create a Product (Admin Only)
-- **Endpoint**: `POST /products`
+- **Endpoint**: `POST /api/v1/products`
 - **Request Body**:
   ```json
   {
@@ -183,7 +199,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
   ```
 
 #### Get All Products
-- **Endpoint**: `GET /products`
+- **Endpoint**: `GET /api/v1/products`
 - **Response**:
   ```json
   [
@@ -199,10 +215,41 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
   ]
   ```
 
+#### Update a Product (Admin Only)
+- **Endpoint**: `PUT /api/v1/products/{id}`
+- **Request Body**:
+  ```json
+  {
+    "name": "Updated Product A",
+    "description": "An updated great product",
+    "image": "https://example.com/updated-product-a.jpg",
+    "price": 29.99,
+    "quantity": 50
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "id": 1,
+    "name": "Updated Product A",
+    "description": "An updated great product",
+    "image": "https://example.com/updated-product-a.jpg",
+    "price": 29.99,
+    "quantity": 50,
+    "createdAt": "2023-10-01T12:00:00Z"
+  }
+  ```
+
+#### Delete a Product (Admin Only)
+- **Endpoint**: `DELETE /api/v1/products/{id}`
+- **Response**: `204 No Content`
+
+---
+
 ### Order Management
 
 #### Place an Order
-- **Endpoint**: `POST /orders`
+- **Endpoint**: `POST /api/v1/orders`
 - **Request Body**:
   ```json
   {
@@ -223,7 +270,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
   ```
 
 #### List Orders for a User
-- **Endpoint**: `GET /orders`
+- **Endpoint**: `GET /api/v1/orders`
 - **Response**:
   ```json
   [
@@ -236,6 +283,25 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
       "createdAt": "2023-10-01T12:00:00Z"
     }
   ]
+  ```
+
+#### Cancel an Order
+- **Endpoint**: `DELETE /api/v1/orders/{id}`
+- **Response**: `204 No Content`
+
+#### Update Order Status (Admin Only)
+- **Endpoint**: `PUT /api/v1/orders/{id}/status`
+- **Request Body**:
+  ```json
+  {
+    "status": "cancelled"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "status": "updated"
+  }
   ```
 
 ---
