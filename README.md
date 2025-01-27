@@ -30,6 +30,9 @@ A lightweight, scalable, and modular e-commerce API built with **Golang**. This 
 - **Migrations**:
   - Database schema migrations using `golang-migrate`.
 
+ - **Documentation**:
+  - Documentation from Swagger can be gotten from  `http://localhost:8080/swagger/index.html`.
+
 ---
 
 ## Table of Contents
@@ -126,7 +129,7 @@ JWT_EXPIRE_IN_SECONDS=604800 # 7 days
     "lastName": "Doe",
     "email": "john.doe@example.com",
     "password": "password123",
-    "role": "user"
+    "role": "user" | "admin"
   }
   ```
 - **Response**:
